@@ -416,18 +416,6 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
     return()=>clearTimeout(t);
   },[shopping,userId]);
 
-  if(!plan) return(
-    <div style={{minHeight:'100vh',background:'#0a0f1e',display:'flex',alignItems:'center',justifyContent:'center'}}>
-      <div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:12}}>💪</div><div style={{color:'#475569'}}>Carregando...</div></div>
-    </div>
-  );
-  if(!plan.length) return(
-    <div style={S.wrap}>
-      <div style={S.header}><div style={{fontSize:18,fontWeight:800,color:'#f1f5f9'}}>💪 NutriPlan</div><button style={{background:'none',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#94a3b8',padding:'6px 12px',fontSize:12,cursor:'pointer'}} onClick={onLogout}>Sair</button></div>
-      <div style={{padding:32,textAlign:'center'}}><div style={{fontSize:64,marginBottom:16}}>👤</div><div style={{fontSize:20,fontWeight:800,color:'#f1f5f9',marginBottom:8}}>Configure seu perfil</div><div style={{color:'#475569',fontSize:14,marginBottom:28}}>Informe seus dados para gerar um plano alimentar personalizado</div><button style={{...S.btn('#22c55e'),padding:'14px 32px',fontSize:15}} onClick={onOpenProfile}>🎯 Configurar Perfil</button></div>
-    </div>
-  );
-
   // ── helpers de plano
   function updateQty(mi,fid,qty){
     setPlan(prev=>prev.map((d,di)=>{
@@ -477,6 +465,19 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
   },[day]);
 
   const cartCount=shopping.filter(i=>!i.checked).length;
+
+  // ── early returns (after all hooks)
+  if(!plan) return(
+    <div style={{minHeight:'100vh',background:'#0a0f1e',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{textAlign:'center'}}><div style={{fontSize:48,marginBottom:12}}>💪</div><div style={{color:'#475569'}}>Carregando...</div></div>
+    </div>
+  );
+  if(!plan.length) return(
+    <div style={S.wrap}>
+      <div style={S.header}><div style={{fontSize:18,fontWeight:800,color:'#f1f5f9'}}>💪 NutriPlan</div><button style={{background:'none',border:'1px solid rgba(255,255,255,0.1)',borderRadius:8,color:'#94a3b8',padding:'6px 12px',fontSize:12,cursor:'pointer'}} onClick={onLogout}>Sair</button></div>
+      <div style={{padding:32,textAlign:'center'}}><div style={{fontSize:64,marginBottom:16}}>👤</div><div style={{fontSize:20,fontWeight:800,color:'#f1f5f9',marginBottom:8}}>Configure seu perfil</div><div style={{color:'#475569',fontSize:14,marginBottom:28}}>Informe seus dados para gerar um plano alimentar personalizado</div><button style={{...S.btn('#22c55e'),padding:'14px 32px',fontSize:15}} onClick={onOpenProfile}>🎯 Configurar Perfil</button></div>
+    </div>
+  );
 
   // ── render lista de compras
   if(tab==='shop') return(
