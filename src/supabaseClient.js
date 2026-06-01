@@ -36,10 +36,10 @@ export async function signUp({ email, password, name }) {
   if (error) throw error;
 
   if (data.user && name) {
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 1500));
     await supabase
       .from('profiles')
-      .upsert({ id: data.user.id, name })
+      .update({ name })
       .eq('id', data.user.id);
   }
 
