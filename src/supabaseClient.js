@@ -35,11 +35,11 @@ export async function signUp({ email, password, name }) {
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) throw error;
 
-  // Salva o nome no perfil
   if (data.user && name) {
+    await new Promise(r => setTimeout(r, 1000));
     await supabase
       .from('profiles')
-      .update({ name })
+      .upsert({ id: data.user.id, name })
       .eq('id', data.user.id);
   }
 
