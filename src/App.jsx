@@ -386,11 +386,15 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
   const timer=useRef(null);
 
   // Carrega plano e lista do Supabase
-useEffect(()=>{
-  supabase.auth.getSession().then(({data:{session}})=>{
-    console.log('SESSION:', session);
-    if(session?.user){setUserId(session.user.id);setScreen('app');}else setScreen('login');
-  });
+  useEffect(()=>{
+    loadUserPlan(userId).then(saved=>{
+      if(saved&&saved.length) setPlan(saved); else setPlan([]);
+    }).catch(()=>setPlan([]));
+    // Carrega lista de compras salva
+    supabase.from('user_plans').select('plan_data').eq('user_id',userId).maybeSingle()
+      .then(({data})=>{ if(data?.plan_data?.shopping) setShopping(data.plan_data.shopping); });
+  },[userId]);
+
   // Auto-save plano
   useEffect(()=>{
     if(!plan||!plan.length||!userId) return;
