@@ -455,14 +455,13 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
     setShowWorkout(false);
   }
 
-  const day=plan[dayIdx];
-  const tc={strength:'#22c55e',cardio:'#3b82f6',rest:'#64748b'}[day?.type]||'#64748b';
   const dayTotals=useMemo(()=>{
+    const day=plan?.[dayIdx];
     if(!day) return {kcal:0,p:0,l:0,cb:0};
     const t={kcal:0,p:0,l:0,cb:0};
     day.meals.forEach(m=>m.foods.forEach(f=>{t.kcal+=f.kcal;t.p+=f.p;t.l+=f.l;t.cb+=f.cb;}));
     return {kcal:t.kcal,p:+t.p.toFixed(1),l:+t.l.toFixed(1),cb:+t.cb.toFixed(1)};
-  },[day]);
+  },[plan,dayIdx]);
 
   const cartCount=shopping.filter(i=>!i.checked).length;
 
@@ -478,6 +477,9 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
       <div style={{padding:32,textAlign:'center'}}><div style={{fontSize:64,marginBottom:16}}>👤</div><div style={{fontSize:20,fontWeight:800,color:'#f1f5f9',marginBottom:8}}>Configure seu perfil</div><div style={{color:'#475569',fontSize:14,marginBottom:28}}>Informe seus dados para gerar um plano alimentar personalizado</div><button style={{...S.btn('#22c55e'),padding:'14px 32px',fontSize:15}} onClick={onOpenProfile}>🎯 Configurar Perfil</button></div>
     </div>
   );
+
+  const day=plan[dayIdx];
+  const tc={strength:'#22c55e',cardio:'#3b82f6',rest:'#64748b'}[day?.type]||'#64748b';
 
   // ── render lista de compras
   if(tab==='shop') return(
