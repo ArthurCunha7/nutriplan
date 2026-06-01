@@ -51,3 +51,4 @@ export async function saveUserPlan(userId, planData) {
       { onConflict: 'user_id' }
     );
   if (error) throw error;
+}
