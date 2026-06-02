@@ -515,7 +515,7 @@ function WorkoutProfilesPage({profiles,plan,onSave,onDelete,onApplyToDay,onBack,
                   {DAYS_SHORT.map((d,i)=>{
                     const isUsing=plan?.[i]?.typeLabel===p.typeLabel;
                     return(
-                      <button key={i} onClick={()=>onApplyToDay(p.id,i)}
+                      <button key={i} onClick={()=>onApplyToDay(p.id,i,isUsing)}
                         style={{padding:'5px 10px',borderRadius:8,border:'1px solid',cursor:'pointer',fontSize:12,fontWeight:700,
                           ...(isUsing?{background:color+'22',borderColor:color,color:color}:{background:'rgba(255,255,255,0.04)',borderColor:'rgba(255,255,255,0.08)',color:'#475569'})}}>
                         {d}{isUsing?' ✓':''}
@@ -768,7 +768,12 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
       plan={plan}
       onSave={saveProfile}
       onDelete={deleteProfile}
-      onApplyToDay={(profileId,dayI)=>{
+      onApplyToDay={(profileId,dayI,isUsing)=>{
+        if(isUsing){
+          // Desmarcar: volta para descanso
+          setPlan(prev=>prev.map((d,di)=>di===dayI?{...d,type:'rest',typeLabel:'Descanso',exercises:'Nenhum treino – foco em sono e recuperação'}:d));
+          return;
+        }
         const p=workoutProfiles.find(wp=>wp.id===profileId);
         if(!p) return;
         const prevLabel=plan[dayI]?.typeLabel;
