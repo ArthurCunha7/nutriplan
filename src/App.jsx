@@ -420,10 +420,142 @@ function ShoppingList({items,onToggle,onRemove,onClear}){
   );
 }
 
+
+// ── WORKOUT PROFILES PAGE ─────────────────────────────────────────────────────
+function WorkoutProfilesPage({profiles,plan,onSave,onDelete,onApplyToDay,onBack,tab,setTab,cartCount,onOpenProfile,onLogout}){
+  const [editing,setEditing]=useState(null); // null | profile object
+  const [showNew,setShowNew]=useState(false);
+
+  function EditForm({initial,onDone}){
+    const [form,setForm]=useState(initial||{id:'wp'+Date.now(),type:'strength',typeLabel:'',exercises:''});
+    const set=k=>e=>setForm(f=>({...f,[k]:e.target.value}));
+    const group=WORKOUT_TYPES.find(w=>w.type===form.type)||WORKOUT_TYPES[0];
+    return(
+      <div style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:16,padding:16,marginBottom:12}}>
+        <div style={{marginBottom:10}}>
+          <label style={S.label}>🏷️ TIPO</label>
+          <div style={{display:'flex',gap:8}}>
+            {WORKOUT_TYPES.map(wt=>(
+              <button key={wt.type} onClick={()=>setForm(f=>({...f,type:wt.type}))} style={{flex:1,padding:'8px 0',borderRadius:10,border:'1px solid',cursor:'pointer',fontSize:18,
+                ...(form.type===wt.type?{background:wt.color+'22',borderColor:wt.color}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.08)'})}}>
+                {wt.icon}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{marginBottom:10}}>
+          <label style={S.label}>📝 NOME DO TREINO</label>
+          <input style={S.input} value={form.typeLabel} onChange={set('typeLabel')} placeholder="Ex: Treino A – Peito e Tríceps"/>
+        </div>
+        <div style={{marginBottom:12}}>
+          <label style={S.label}>💪 EXERCÍCIOS E SÉRIES</label>
+          <textarea style={{...S.input,minHeight:130,resize:'vertical',lineHeight:1.8}} value={form.exercises} onChange={set('exercises')}
+            placeholder={"Supino reto 4×8\nSupino inclinado 3×10\nCrucifixo 3×12\nTríceps polia 4×10\nTríceps francês 3×10"}/>
+          <div style={{fontSize:11,color:'#475569',marginTop:4}}>Um exercício por linha</div>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button style={{...S.btn('#22c55e'),flex:1,padding:11}} onClick={()=>{if(!form.typeLabel.trim())return;onSave({...form,color:WORKOUT_TYPES.find(w=>w.type===form.type)?.color||'#22c55e'});onDone();}}>✅ Salvar</button>
+          <button style={{...S.btn('#475569'),padding:11}} onClick={onDone}>Cancelar</button>
+        </div>
+      </div>
+    );
+  }
+
+  const DAYS_SHORT=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+
+  return(
+    <div style={S.wrap}>
+      <div style={S.header}>
+        <div style={{fontSize:18,fontWeight:800,color:'#f1f5f9'}}>💪 Meus Treinos</div>
+        <button style={{...S.btn('#22c55e'),padding:'7px 14px',fontSize:13}} onClick={()=>setShowNew(true)}>+ Novo</button>
+      </div>
+
+      <div style={{padding:'16px 16px 100px'}}>
+        {showNew&&<EditForm initial={null} onDone={()=>setShowNew(false)}/>}
+
+        {profiles.length===0&&!showNew&&(
+          <div style={{textAlign:'center',padding:'48px 0'}}>
+            <div style={{fontSize:56,marginBottom:12}}>💪</div>
+            <div style={{fontSize:16,fontWeight:700,color:'#f1f5f9',marginBottom:8}}>Nenhum perfil criado</div>
+            <div style={{color:'#475569',fontSize:13,marginBottom:24}}>Crie perfis de treino e aplique a qualquer dia da semana.</div>
+            <button style={{...S.btn('#22c55e'),padding:'12px 28px'}} onClick={()=>setShowNew(true)}>+ Criar primeiro treino</button>
+          </div>
+        )}
+
+        {profiles.map(p=>{
+          const color=WORKOUT_TYPES.find(w=>w.type===p.type)?.color||'#22c55e';
+          const daysUsing=plan?plan.map((d,i)=>d.typeLabel===p.typeLabel?i:-1).filter(i=>i>=0):[];
+          if(editing?.id===p.id) return <EditForm key={p.id} initial={p} onDone={()=>setEditing(null)}/>;
+          return(
+            <div key={p.id} style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${color}33`,borderRadius:16,padding:16,marginBottom:12}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                <div>
+                  <div style={{fontSize:15,fontWeight:800,color:color}}>{p.typeLabel}</div>
+                  <div style={{fontSize:11,color:'#475569',marginTop:2}}>{WORKOUT_TYPES.find(w=>w.type===p.type)?.label}</div>
+                </div>
+                <div style={{display:'flex',gap:6}}>
+                  <button style={{...S.btn('#1e3a5f'),padding:'5px 10px',fontSize:12}} onClick={()=>setEditing(p)}>✏️</button>
+                  <button style={{...S.btn('#3f1515'),padding:'5px 10px',fontSize:12}} onClick={()=>onDelete(p.id)}>🗑️</button>
+                </div>
+              </div>
+              {p.exercises&&(
+                <div style={{fontSize:12,color:'#94a3b8',lineHeight:1.8,whiteSpace:'pre-line',marginBottom:10,padding:'8px 10px',background:'rgba(0,0,0,0.2)',borderRadius:8}}>
+                  {p.exercises}
+                </div>
+              )}
+              {daysUsing.length>0&&(
+                <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:10}}>
+                  {daysUsing.map(i=><span key={i} style={{...S.badge(color),fontSize:11}}>{DAYS_SHORT[i]}</span>)}
+                  <span style={{fontSize:11,color:'#475569'}}>usando este perfil</span>
+                </div>
+              )}
+              <div>
+                <div style={{fontSize:11,color:'#475569',marginBottom:6,fontWeight:700}}>APLICAR AO DIA:</div>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                  {DAYS_SHORT.map((d,i)=>{
+                    const isUsing=plan?.[i]?.typeLabel===p.typeLabel;
+                    return(
+                      <button key={i} onClick={()=>onApplyToDay(p.id,i)}
+                        style={{padding:'5px 10px',borderRadius:8,border:'1px solid',cursor:'pointer',fontSize:12,fontWeight:700,
+                          ...(isUsing?{background:color+'22',borderColor:color,color:color}:{background:'rgba(255,255,255,0.04)',borderColor:'rgba(255,255,255,0.08)',color:'#475569'})}}>
+                        {d}{isUsing?' ✓':''}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <nav style={S.nav}>
+        {[['plan','📋','Plano'],['shop','🛒','Compras'],['workout','💪','Treinos']].map(([t,ic,lb])=>(
+          <button key={t} style={S.navBtn(tab===t)} onClick={()=>setTab(t)}>
+            <span style={{fontSize:20,position:'relative'}}>
+              {ic}
+              {t==='shop'&&cartCount>0&&<span style={{position:'absolute',top:-4,right:-6,background:'#ef4444',color:'#fff',borderRadius:99,fontSize:9,fontWeight:900,padding:'1px 4px',lineHeight:1.4}}>{cartCount}</span>}
+            </span>
+            <span style={{fontSize:10,fontWeight:700}}>{lb}</span>
+          </button>
+        ))}
+        <button style={S.navBtn(false)} onClick={onOpenProfile}>
+          <span style={{fontSize:20}}>👤</span>
+          <span style={{fontSize:10,fontWeight:700}}>Perfil</span>
+        </button>
+        <button style={S.navBtn(false)} onClick={onLogout}>
+          <span style={{fontSize:20}}>🚪</span>
+          <span style={{fontSize:10,fontWeight:700}}>Sair</span>
+        </button>
+      </nav>
+    </div>
+  );
+}
+
 // ── MEAL PLAN APP ─────────────────────────────────────────────────────────────
 function MealPlanApp({onLogout,userId,onOpenProfile}){
   const [plan,setPlan]           = useState(null);
-  const [tab,setTab]             = useState('plan');   // 'plan' | 'shop'
+  const [tab,setTab]             = useState('plan');   // 'plan' | 'shop' | 'workout'
   const [dayIdx,setDayIdx]       = useState(new Date().getDay()===0?6:new Date().getDay()-1);
   const [editFood,setEditFood]   = useState(null);
   const [editMeal,setEditMeal]   = useState(null); // {mi, field} field: 'name'|'time'
@@ -433,16 +565,21 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
   const [shopping,setShopping]   = useState([]);        // [{id,name,qty,kcal,checked}]
   const [saving,setSaving]       = useState(false);
   const [saveMsg,setSaveMsg]     = useState('');
+  const [workoutProfiles,setWorkoutProfiles] = useState([]);
   const timer=useRef(null);
+  const timerProfiles=useRef(null);
 
   // Carrega plano e lista do Supabase
   useEffect(()=>{
     loadUserPlan(userId).then(saved=>{
       if(saved&&saved.length) setPlan(saved); else setPlan([]);
     }).catch(()=>setPlan([]));
-    // Carrega lista de compras salva
+    // Carrega lista de compras e perfis de treino
     supabase.from('user_plans').select('plan_data').eq('user_id',userId).maybeSingle()
-      .then(({data})=>{ if(data?.plan_data?.shopping) setShopping(data.plan_data.shopping); });
+      .then(({data})=>{
+        if(data?.plan_data?.shopping) setShopping(data.plan_data.shopping);
+        if(data?.plan_data?.workoutProfiles) setWorkoutProfiles(data.plan_data.workoutProfiles);
+      });
   },[userId]);
 
   // Auto-save plano
@@ -461,10 +598,20 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
   useEffect(()=>{
     if(!userId) return;
     const t=setTimeout(()=>{
-      supabase.from('user_plans').upsert({user_id:userId,plan_data:{...(plan||[]),shopping},updated_at:new Date().toISOString()},{onConflict:'user_id'});
+      supabase.from('user_plans').upsert({user_id:userId,plan_data:{...(plan||[]),shopping,workoutProfiles},updated_at:new Date().toISOString()},{onConflict:'user_id'});
     },1500);
     return()=>clearTimeout(t);
   },[shopping,userId]);
+
+  // Auto-save workoutProfiles
+  useEffect(()=>{
+    if(!userId) return;
+    clearTimeout(timerProfiles.current);
+    timerProfiles.current=setTimeout(()=>{
+      supabase.from('user_plans').upsert({user_id:userId,plan_data:{...(plan||[]),shopping,workoutProfiles},updated_at:new Date().toISOString()},{onConflict:'user_id'});
+    },1500);
+    return()=>clearTimeout(timerProfiles.current);
+  },[workoutProfiles,userId]);
 
   // ── helpers de plano
   function updateQty(mi,fid,qty){
@@ -503,10 +650,40 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
   function removeCart(id){ setShopping(prev=>prev.filter(i=>i.id!==id)); }
   function clearDone(){    setShopping(prev=>prev.filter(i=>!i.checked)); }
 
-  // ── troca treino
+  // ── troca treino — propaga para todos os dias com mesmo typeLabel
   function applyWorkout(opt){
-    setPlan(prev=>prev.map((d,di)=>di!==dayIdx?d:{...d,type:opt.type,typeLabel:opt.typeLabel,detail:opt.detail,exercises:opt.exercises||''}));
+    const prevLabel=plan[dayIdx]?.typeLabel;
+    setPlan(prev=>prev.map(d=>{
+      // Atualiza o dia atual sempre; atualiza outros dias se tinham o mesmo perfil
+      if(d.typeLabel===prevLabel||plan.indexOf(d)===dayIdx){
+        return {...d,type:opt.type,typeLabel:opt.typeLabel,exercises:opt.exercises||''};
+      }
+      return d;
+    }));
+    // Upsert perfil na lista de perfis salvos
+    setWorkoutProfiles(prev=>{
+      const idx=prev.findIndex(p=>p.typeLabel===opt.typeLabel);
+      if(idx>=0){ const next=[...prev]; next[idx]={...opt}; return next; }
+      return [...prev,{...opt,id:'wp'+Date.now()}];
+    });
     setShowWorkout(false);
+  }
+
+  // ── criar/editar perfil de treino
+  function saveProfile(profile){
+    setWorkoutProfiles(prev=>{
+      const idx=prev.findIndex(p=>p.id===profile.id);
+      if(idx>=0){ const next=[...prev]; next[idx]=profile; return next; }
+      return [...prev,profile];
+    });
+    // Propaga exercícios para dias que usam esse perfil
+    if(profile.typeLabel){
+      setPlan(prev=>prev.map(d=>d.typeLabel===profile.typeLabel?{...d,type:profile.type,exercises:profile.exercises||''}:d));
+    }
+  }
+
+  function deleteProfile(id){
+    setWorkoutProfiles(prev=>prev.filter(p=>p.id!==id));
   }
 
   // ── redistribuir refeições
@@ -584,12 +761,33 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
   const day=plan[dayIdx];
   const tc={strength:'#22c55e',cardio:'#3b82f6',rest:'#64748b'}[day?.type]||'#64748b';
 
+  // ── render aba treinos
+  if(tab==='workout') return(
+    <WorkoutProfilesPage
+      profiles={workoutProfiles}
+      plan={plan}
+      onSave={saveProfile}
+      onDelete={deleteProfile}
+      onApplyToDay={(profileId,dayI)=>{
+        const p=workoutProfiles.find(wp=>wp.id===profileId);
+        if(!p) return;
+        const prevLabel=plan[dayI]?.typeLabel;
+        setPlan(prev=>prev.map((d,di)=>{
+          if(di===dayI||d.typeLabel===prevLabel) return {...d,type:p.type,typeLabel:p.typeLabel,exercises:p.exercises||''};
+          return d;
+        }));
+      }}
+      onBack={()=>setTab('plan')}
+      tab={tab} setTab={setTab} cartCount={cartCount} onOpenProfile={onOpenProfile} onLogout={onLogout}
+    />
+  );
+
   // ── render lista de compras
   if(tab==='shop') return(
     <>
       <ShoppingList items={shopping} onToggle={toggleCart} onRemove={removeCart} onClear={clearDone}/>
       <nav style={S.nav}>
-        {[['plan','📋','Plano'],['shop','🛒','Compras']].map(([t,ic,lb])=>(
+        {[['plan','📋','Plano'],['shop','🛒','Compras'],['workout','💪','Treinos']].map(([t,ic,lb])=>(
           <button key={t} style={S.navBtn(tab===t)} onClick={()=>setTab(t)}>
             <span style={{fontSize:20,position:'relative'}}>
               {ic}
@@ -645,7 +843,7 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
               <button onClick={()=>setShowWorkout(true)} style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,color:'#94a3b8',padding:'2px 8px',fontSize:11,cursor:'pointer',fontWeight:600}}>🔄 Treino</button>
               <button onClick={()=>setShowMealCount(true)} style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,color:'#94a3b8',padding:'2px 8px',fontSize:11,cursor:'pointer',fontWeight:600}}>🍽️ Refeições</button>
             </div>
-            <div style={{fontSize:12,color:'#475569',marginTop:4}}>{day.detail}</div>
+            {day.exercises&&<div style={{fontSize:12,color:'#94a3b8',marginTop:6,lineHeight:1.7,whiteSpace:'pre-line'}}>{day.exercises.replace(/·/g,'\n')}</div>}
           </div>
           <div style={{textAlign:'right'}}>
             <div style={{fontSize:20,fontWeight:900,color:tc}}>{dayTotals.kcal}</div>
@@ -721,7 +919,7 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
 
       {/* Bottom nav */}
       <nav style={S.nav}>
-        {[['plan','📋','Plano'],['shop','🛒','Compras']].map(([t,ic,lb])=>(
+        {[['plan','📋','Plano'],['shop','🛒','Compras'],['workout','💪','Treinos']].map(([t,ic,lb])=>(
           <button key={t} style={S.navBtn(tab===t)} onClick={()=>setTab(t)}>
             <span style={{fontSize:20,position:'relative'}}>
               {ic}
