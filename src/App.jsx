@@ -250,40 +250,88 @@ function ProfilePage({userId,initialProfile,onSave,onBack}){
 // ── MODAL TROCA DE TREINO ─────────────────────────────────────────────────────
 function WorkoutModal({day,onSelect,onClose}){
   const [tab,setTab]=useState(day.type);
+  const [mode,setMode]=useState('list');
+  const [customName,setCustomName]=useState(day.typeLabel||''  );
+  const [customDetail,setCustomDetail]=useState(day.detail||''  );
+  const [customExercises,setCustomExercises]=useState(day.exercises||''  );
   const group=WORKOUT_TYPES.find(w=>w.type===tab)||WORKOUT_TYPES[0];
+  function handleCustomSave(){
+    if(!customName.trim()) return;
+    onSelect({type:tab,color:group.color,typeLabel:customName,detail:customDetail,exercises:customExercises});
+  }
   return(
     <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:300,display:'flex',alignItems:'flex-end'}} onClick={onClose}>
-      <div style={{background:'#1e293b',borderRadius:'20px 20px 0 0',width:'100%',padding:20,maxHeight:'85vh',overflow:'hidden',display:'flex',flexDirection:'column'}} onClick={e=>e.stopPropagation()}>
+      <div style={{background:'#1e293b',borderRadius:'20px 20px 0 0',width:'100%',padding:20,maxHeight:'90vh',overflow:'hidden',display:'flex',flexDirection:'column'}} onClick={e=>e.stopPropagation()}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-          <div style={{fontSize:16,fontWeight:800,color:'#f1f5f9'}}>🔄 Trocar Treino — {day.fullName}</div>
+          <div style={{fontSize:16,fontWeight:800,color:'#f1f5f9'}}>🔄 Editar Treino — {day.fullName}</div>
           <button style={S.btn('#ef4444')} onClick={onClose}>✕</button>
         </div>
-        {/* Category tabs */}
         <div style={{display:'flex',gap:8,marginBottom:16}}>
-          {WORKOUT_TYPES.map(wt=>(
-            <button key={wt.type} onClick={()=>setTab(wt.type)} style={{flex:1,padding:'8px 0',borderRadius:10,border:'1px solid',cursor:'pointer',fontSize:13,fontWeight:700,
-              ...(tab===wt.type?{background:wt.color+'22',borderColor:wt.color,color:wt.color}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.08)',color:'#475569'})}}>
-              {wt.icon} {wt.label}
+          {[['list','📋 Lista'],['custom','✏️ Personalizar']].map(([m,lb])=>(
+            <button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:'8px 0',borderRadius:10,border:'1px solid',cursor:'pointer',fontSize:13,fontWeight:700,
+              ...(mode===m?{background:'#6366f122',borderColor:'#6366f1',color:'#818cf8'}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.08)',color:'#475569'})}}>
+              {lb}
             </button>
           ))}
         </div>
-        {/* Options */}
-        <div style={{overflowY:'auto',flex:1,display:'flex',flexDirection:'column',gap:8}}>
-          {group.options.map((opt,i)=>{
-            const isActive=day.typeLabel===opt.typeLabel;
-            return(
-              <div key={i} onClick={()=>onSelect({type:group.type,color:group.color,...opt})}
-                style={{padding:'12px 14px',borderRadius:12,cursor:'pointer',border:'1px solid',
-                  ...(isActive?{background:group.color+'18',borderColor:group.color}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.06)'})}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
-                  <div style={{fontSize:13,fontWeight:700,color:isActive?group.color:'#f1f5f9'}}>{opt.typeLabel}</div>
-                  {isActive&&<span style={S.badge(group.color)}>✓ Ativo</span>}
-                </div>
-                <div style={{fontSize:12,color:'#64748b'}}>{opt.detail}</div>
+        {mode==='list'?(
+          <>
+            <div style={{display:'flex',gap:8,marginBottom:16}}>
+              {WORKOUT_TYPES.map(wt=>(
+                <button key={wt.type} onClick={()=>setTab(wt.type)} style={{flex:1,padding:'8px 0',borderRadius:10,border:'1px solid',cursor:'pointer',fontSize:13,fontWeight:700,
+                  ...(tab===wt.type?{background:wt.color+'22',borderColor:wt.color,color:wt.color}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.08)',color:'#475569'})}}>
+                  {wt.icon} {wt.label}
+                </button>
+              ))}
+            </div>
+            <div style={{overflowY:'auto',flex:1,display:'flex',flexDirection:'column',gap:8}}>
+              {group.options.map((opt,i)=>{
+                const isActive=day.typeLabel===opt.typeLabel;
+                return(
+                  <div key={i} onClick={()=>onSelect({type:group.type,color:group.color,...opt})}
+                    style={{padding:'12px 14px',borderRadius:12,cursor:'pointer',border:'1px solid',
+                      ...(isActive?{background:group.color+'18',borderColor:group.color}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.06)'})}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+                      <div style={{fontSize:13,fontWeight:700,color:isActive?group.color:'#f1f5f9'}}>{opt.typeLabel}</div>
+                      {isActive&&<span style={S.badge(group.color)}>✓ Ativo</span>}
+                    </div>
+                    <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>{opt.detail}</div>
+                    <div style={{fontSize:11,color:'#475569',lineHeight:1.5}}>{opt.exercises}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        ):(
+          <div style={{overflowY:'auto',flex:1,display:'flex',flexDirection:'column',gap:14}}>
+            <div>
+              <label style={S.label}>🏷️ TIPO DE TREINO</label>
+              <div style={{display:'flex',gap:8}}>
+                {WORKOUT_TYPES.map(wt=>(
+                  <button key={wt.type} onClick={()=>setTab(wt.type)} style={{flex:1,padding:'8px 0',borderRadius:10,border:'1px solid',cursor:'pointer',fontSize:18,
+                    ...(tab===wt.type?{background:wt.color+'22',borderColor:wt.color}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.08)'})}}>
+                    {wt.icon}
+                  </button>
+                ))}
               </div>
-            );
-          })}
-        </div>
+            </div>
+            <div>
+              <label style={S.label}>📝 NOME DO TREINO</label>
+              <input style={S.input} value={customName} onChange={e=>setCustomName(e.target.value)} placeholder="Ex: Treino A – Peito e Tríceps"/>
+            </div>
+            <div>
+              <label style={S.label}>📋 DESCRIÇÃO CURTA</label>
+              <input style={S.input} value={customDetail} onChange={e=>setCustomDetail(e.target.value)} placeholder="Ex: Supino · Tríceps · Ombro 🏋️"/>
+            </div>
+            <div>
+              <label style={S.label}>💪 EXERCÍCIOS E SÉRIES</label>
+              <textarea style={{...S.input,minHeight:120,resize:'vertical',lineHeight:1.6}} value={customExercises} onChange={e=>setCustomExercises(e.target.value)}
+                placeholder={"Ex:\nSupino reto 4×8\nSupino inclinado 3×10\nCrucifixo 3×12\nTríceps polia 4×10"}/>
+              <div style={{fontSize:11,color:'#475569',marginTop:4}}>Um exercício por linha com séries e repetições</div>
+            </div>
+            <button style={{...S.btn('#22c55e'),padding:13,fontSize:14}} onClick={handleCustomSave}>✅ Salvar Treino Personalizado</button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -378,8 +426,10 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
   const [tab,setTab]             = useState('plan');   // 'plan' | 'shop'
   const [dayIdx,setDayIdx]       = useState(new Date().getDay()===0?6:new Date().getDay()-1);
   const [editFood,setEditFood]   = useState(null);
+  const [editMeal,setEditMeal]   = useState(null); // {mi, field} field: 'name'|'time'
   const [showSearch,setShowSearch]   = useState(null);
   const [showWorkout,setShowWorkout] = useState(false);
+  const [showMealCount,setShowMealCount] = useState(false);
   const [shopping,setShopping]   = useState([]);        // [{id,name,qty,kcal,checked}]
   const [saving,setSaving]       = useState(false);
   const [saveMsg,setSaveMsg]     = useState('');
@@ -440,6 +490,10 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
     setShowSearch(null);
   }
 
+  function updateMeal(mi,field,value){
+    setPlan(prev=>prev.map((d,di)=>di!==dayIdx?d:{...d,meals:d.meals.map((m,mii)=>mii!==mi?m:{...m,[field]:value})}));
+  }
+
   // ── helpers carrinho
   function addToCart(food){
     if(shopping.find(i=>i.name===food.name)) return; // evita duplicata
@@ -453,6 +507,55 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
   function applyWorkout(opt){
     setPlan(prev=>prev.map((d,di)=>di!==dayIdx?d:{...d,type:opt.type,typeLabel:opt.typeLabel,detail:opt.detail,exercises:opt.exercises||''}));
     setShowWorkout(false);
+  }
+
+  // ── redistribuir refeições
+  function redistributeMeals(count){
+    const TEMPLATES={
+      2:[
+        {time:'12:00',name:'Almoço',icon:'🍽️'},
+        {time:'19:00',name:'Jantar',icon:'🌙'},
+      ],
+      3:[
+        {time:'07:00',name:'Café da Manhã',icon:'🌅'},
+        {time:'13:00',name:'Almoço',icon:'🍽️'},
+        {time:'19:00',name:'Jantar',icon:'🌙'},
+      ],
+      4:[
+        {time:'07:00',name:'Café da Manhã',icon:'🌅'},
+        {time:'12:00',name:'Almoço',icon:'🍽️'},
+        {time:'16:00',name:'Lanche',icon:'🥛'},
+        {time:'20:00',name:'Jantar',icon:'🌙'},
+      ],
+      5:[
+        {time:'07:00',name:'Café da Manhã',icon:'🌅'},
+        {time:'10:00',name:'Lanche 1',icon:'🥛'},
+        {time:'13:00',name:'Almoço',icon:'🍽️'},
+        {time:'16:30',name:'Pré-Treino',icon:'⚡'},
+        {time:'20:00',name:'Pós-Treino / Jantar',icon:'💪'},
+      ],
+      6:[
+        {time:'07:00',name:'Café da Manhã',icon:'🌅'},
+        {time:'10:00',name:'Lanche 1',icon:'🥛'},
+        {time:'13:00',name:'Almoço',icon:'🍽️'},
+        {time:'16:30',name:'Pré-Treino',icon:'⚡'},
+        {time:'20:00',name:'Pós-Treino / Jantar',icon:'💪'},
+        {time:'22:00',name:'Ceia',icon:'🌙'},
+      ],
+    };
+    setPlan(prev=>prev.map((d,di)=>{
+      if(di!==dayIdx) return d;
+      // Coleta todos os alimentos do dia atual
+      const allFoods=d.meals.flatMap(m=>m.foods);
+      const tmpl=TEMPLATES[count]||TEMPLATES[5];
+      // Distribui alimentos igualmente entre as refeições
+      const newMeals=tmpl.map((t,ti)=>({
+        ...t,
+        foods:allFoods.filter((_,fi)=>fi%tmpl.length===ti),
+      }));
+      return {...d,meals:newMeals};
+    }));
+    setShowMealCount(false);
   }
 
   const dayTotals=useMemo(()=>{
@@ -539,7 +642,8 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
             <div style={{display:'flex',alignItems:'center',gap:8,marginTop:4}}>
               <div style={{fontSize:13,color:tc,fontWeight:700}}>{day.typeLabel}</div>
               {/* Botão troca treino */}
-              <button onClick={()=>setShowWorkout(true)} style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,color:'#94a3b8',padding:'2px 8px',fontSize:11,cursor:'pointer',fontWeight:600}}>🔄 Trocar</button>
+              <button onClick={()=>setShowWorkout(true)} style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,color:'#94a3b8',padding:'2px 8px',fontSize:11,cursor:'pointer',fontWeight:600}}>🔄 Treino</button>
+              <button onClick={()=>setShowMealCount(true)} style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,color:'#94a3b8',padding:'2px 8px',fontSize:11,cursor:'pointer',fontWeight:600}}>🍽️ Refeições</button>
             </div>
             <div style={{fontSize:12,color:'#475569',marginTop:4}}>{day.detail}</div>
           </div>
@@ -567,8 +671,16 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
               <span style={{fontSize:20}}>{meal.icon}</span>
               <div style={{flex:1}}>
-                <div style={{fontSize:14,fontWeight:700,color:'#f1f5f9'}}>{meal.name}</div>
-                <div style={{fontSize:11,color:'#475569',fontWeight:600}}>{meal.time}</div>
+                {editMeal?.mi===mi&&editMeal?.field==='name'
+                  ?<input autoFocus style={{...S.input,padding:'4px 8px',fontSize:14,fontWeight:700,marginBottom:2}} value={meal.name}
+                      onChange={e=>updateMeal(mi,'name',e.target.value)} onBlur={()=>setEditMeal(null)} onKeyDown={e=>e.key==='Enter'&&setEditMeal(null)}/>
+                  :<div style={{fontSize:14,fontWeight:700,color:'#f1f5f9',cursor:'pointer'}} onClick={()=>setEditMeal({mi,field:'name'})} title="Clique para editar">{meal.name} <span style={{fontSize:10,color:'#475569'}}>✏️</span></div>
+                }
+                {editMeal?.mi===mi&&editMeal?.field==='time'
+                  ?<input autoFocus style={{...S.input,padding:'2px 6px',fontSize:11,width:80,marginTop:2}} type="time" value={meal.time}
+                      onChange={e=>updateMeal(mi,'time',e.target.value)} onBlur={()=>setEditMeal(null)}/>
+                  :<div style={{fontSize:11,color:'#475569',fontWeight:600,cursor:'pointer',marginTop:2}} onClick={()=>setEditMeal({mi,field:'time'})} title="Clique para editar">{meal.time} <span style={{fontSize:9}}>✏️</span></div>
+                }
               </div>
               <span style={S.badge('#f59e0b')}>{mt.kcal} kcal</span>
             </div>
@@ -629,6 +741,31 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
       </nav>
 
       {showSearch!==null&&<FoodModal onSelect={t=>addFood(showSearch,t)} onClose={()=>setShowSearch(null)}/>}
+      {showMealCount&&(
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:300,display:'flex',alignItems:'flex-end'}} onClick={()=>setShowMealCount(false)}>
+          <div style={{background:'#1e293b',borderRadius:'20px 20px 0 0',width:'100%',padding:24}} onClick={e=>e.stopPropagation()}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div style={{fontSize:16,fontWeight:800,color:'#f1f5f9'}}>🍽️ Dividir Refeições — {day.fullName}</div>
+              <button style={S.btn('#ef4444')} onClick={()=>setShowMealCount(false)}>✕</button>
+            </div>
+            <div style={{fontSize:12,color:'#475569',marginBottom:16}}>Escolha em quantas refeições distribuir os macros do dia. Os alimentos serão redistribuídos automaticamente.</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:10}}>
+              {[2,3,4,5,6].map(n=>{
+                const active=day.meals.length===n;
+                return(
+                  <button key={n} onClick={()=>redistributeMeals(n)}
+                    style={{padding:'16px 0',borderRadius:12,border:'1px solid',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:6,
+                      ...(active?{background:'#22c55e22',borderColor:'#22c55e',color:'#4ade80'}:{background:'rgba(255,255,255,0.04)',borderColor:'rgba(255,255,255,0.08)',color:'#94a3b8'})}}>
+                    <span style={{fontSize:24,fontWeight:900}}>{n}</span>
+                    <span style={{fontSize:10,fontWeight:700}}>{active?'✓ Atual':'refeições'}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{marginTop:16,fontSize:11,color:'#334155',textAlign:'center'}}>* Apenas o dia atual será alterado</div>
+          </div>
+        </div>
+      )}
       {showWorkout&&<WorkoutModal day={day} onSelect={applyWorkout} onClose={()=>setShowWorkout(false)}/>}
     </div>
   );
