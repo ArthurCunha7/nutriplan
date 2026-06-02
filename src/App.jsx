@@ -776,11 +776,8 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
         }
         const p=workoutProfiles.find(wp=>wp.id===profileId);
         if(!p) return;
-        const prevLabel=plan[dayI]?.typeLabel;
-        setPlan(prev=>prev.map((d,di)=>{
-          if(di===dayI||d.typeLabel===prevLabel) return {...d,type:p.type,typeLabel:p.typeLabel,exercises:p.exercises||''};
-          return d;
-        }));
+        // Aplica apenas ao dia clicado
+        setPlan(prev=>prev.map((d,di)=>di===dayI?{...d,type:p.type,typeLabel:p.typeLabel,exercises:p.exercises||''}:d));
       }}
       onBack={()=>setTab('plan')}
       tab={tab} setTab={setTab} cartCount={cartCount} onOpenProfile={onOpenProfile} onLogout={onLogout}
