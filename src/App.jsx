@@ -1,7 +1,7 @@
 // src/App.jsx — NutriPlan completo
 // Novidades: 🛒 Lista de compras | 🔄 Troca de tipo de treino por dia
 import { useState, useMemo, useRef, useEffect } from "react";
-import { supabase, signUp, signIn, signOut, loadUserPlan, saveUserPlan } from "./supabaseClient";
+import { supabase, signUp, signIn, signOut, signInWithGoogle, loadUserPlan, saveUserPlan } from "./supabaseClient";
 
 // ── TACO DB ───────────────────────────────────────────────────────────────────
 const TACO_DB = [{"id":1,"n":"Arroz, integral, cozido","c":"Cereais","e":124,"p":2.6,"l":1.0,"cb":25.8},{"id":3,"n":"Arroz, tipo 1, cozido","c":"Cereais","e":128,"p":2.5,"l":0.2,"cb":28.1},{"id":7,"n":"Aveia, flocos, crua","c":"Cereais","e":394,"p":13.9,"l":8.5,"cb":66.6},{"id":52,"n":"Pão, trigo, forma, integral","c":"Cereais","e":253,"p":9.4,"l":3.7,"cb":49.9},{"id":53,"n":"Pão, trigo, francês","c":"Cereais","e":300,"p":8.0,"l":3.1,"cb":58.6},{"id":88,"n":"Batata, doce, cozida","c":"Vegetais","e":77,"p":0.6,"l":0.1,"cb":18.4},{"id":91,"n":"Batata, inglesa, cozida","c":"Vegetais","e":52,"p":1.2,"l":0.0,"cb":11.9},{"id":100,"n":"Brócolis, cozido","c":"Vegetais","e":25,"p":2.1,"l":0.5,"cb":4.4},{"id":109,"n":"Cenoura, cozida","c":"Vegetais","e":30,"p":0.8,"l":0.2,"cb":6.7},{"id":116,"n":"Couve, manteiga, refogada","c":"Vegetais","e":90,"p":1.7,"l":6.6,"cb":8.7},{"id":129,"n":"Mandioca, cozida","c":"Vegetais","e":125,"p":0.6,"l":0.3,"cb":30.1},{"id":157,"n":"Tomate, com semente, cru","c":"Vegetais","e":15,"p":1.1,"l":0.2,"cb":3.1},{"id":179,"n":"Banana, nanica, crua","c":"Frutas","e":92,"p":1.4,"l":0.1,"cb":23.8},{"id":182,"n":"Banana, prata, crua","c":"Frutas","e":98,"p":1.3,"l":0.1,"cb":26.0},{"id":222,"n":"Maçã, Fuji, com casca, crua","c":"Frutas","e":56,"p":0.3,"l":0.0,"cb":15.2},{"id":226,"n":"Mamão, Papaia, cru","c":"Frutas","e":40,"p":0.5,"l":0.1,"cb":10.4},{"id":239,"n":"Morango, cru","c":"Frutas","e":30,"p":0.9,"l":0.3,"cb":6.8},{"id":277,"n":"Atum, conserva em óleo","c":"Pescados","e":166,"p":26.2,"l":6.0,"cb":0},{"id":315,"n":"Salmão, filé, grelhado","c":"Pescados","e":229,"p":23.9,"l":14.0,"cb":0},{"id":318,"n":"Sardinha, assada","c":"Pescados","e":164,"p":32.2,"l":3.0,"cb":0},{"id":326,"n":"Carne, bovina, acém, moído, cozido","c":"Carnes","e":212,"p":26.7,"l":10.9,"cb":0},{"id":381,"n":"Carne, bovina, picanha, grelhada","c":"Carnes","e":289,"p":26.4,"l":19.5,"cb":0},{"id":395,"n":"Frango, coração, grelhado","c":"Carnes","e":207,"p":22.4,"l":12.1,"cb":0.6},{"id":396,"n":"Frango, coxa, com pele, assada","c":"Carnes","e":215,"p":28.5,"l":10.4,"cb":0.1},{"id":408,"n":"Frango, peito, sem pele, cozido","c":"Carnes","e":163,"p":31.5,"l":3.2,"cb":0},{"id":410,"n":"Frango, peito, sem pele, grelhado","c":"Carnes","e":159,"p":32.0,"l":2.5,"cb":0},{"id":413,"n":"Frango, sobrecoxa, sem pele, assada","c":"Carnes","e":233,"p":29.2,"l":12.0,"cb":0},{"id":448,"n":"Iogurte, natural","c":"Laticínios","e":51,"p":4.1,"l":3.0,"cb":1.9},{"id":449,"n":"Iogurte, natural, desnatado","c":"Laticínios","e":41,"p":3.8,"l":0.3,"cb":5.8},{"id":461,"n":"Queijo, minas, frescal","c":"Laticínios","e":264,"p":17.4,"l":20.2,"cb":3.2},{"id":463,"n":"Queijo, mozarela","c":"Laticínios","e":330,"p":22.6,"l":25.2,"cb":3.0},{"id":469,"n":"Queijo, ricota","c":"Laticínios","e":140,"p":12.6,"l":8.1,"cb":3.8},{"id":486,"n":"Ovo, de galinha, clara, cozida","c":"Ovos","e":59,"p":13.4,"l":0.1,"cb":0},{"id":488,"n":"Ovo, de galinha, inteiro, cozido","c":"Ovos","e":146,"p":13.3,"l":9.5,"cb":0.6},{"id":489,"n":"Ovo, de galinha, inteiro, cru","c":"Ovos","e":143,"p":13.0,"l":8.9,"cb":1.6},{"id":557,"n":"Amendoim, grão, cru","c":"Leguminosas","e":544,"p":27.2,"l":43.9,"cb":20.3},{"id":561,"n":"Feijão, carioca, cozido","c":"Leguminosas","e":76,"p":4.8,"l":0.5,"cb":13.6},{"id":567,"n":"Feijão, preto, cozido","c":"Leguminosas","e":77,"p":4.5,"l":0.5,"cb":14.0},{"id":577,"n":"Lentilha, cozida","c":"Leguminosas","e":93,"p":6.3,"l":0.5,"cb":16.3},{"id":584,"n":"Soja, queijo (tofu)","c":"Leguminosas","e":64,"p":6.6,"l":4.0,"cb":2.1},{"id":589,"n":"Castanha-do-Brasil, crua","c":"Nozes","e":643,"p":14.5,"l":63.5,"cb":15.1},{"id":594,"n":"Linhaça, semente","c":"Nozes","e":495,"p":14.1,"l":32.3,"cb":43.3},{"id":507,"n":"Mel, de abelha","c":"Doces","e":309,"p":0,"l":0,"cb":84.0}];
@@ -151,10 +151,23 @@ function LoginPage({onSwitch,onLogin}){
     setLoading(true);
     try{await signIn({email,password});onLogin();}catch(e){setErr(e.message||'Email ou senha incorretos');}finally{setLoading(false);}
   }
+  async function handleGoogle(){
+    setLoading(true);
+    try{await signInWithGoogle();}catch(e){setErr(e.message||'Erro ao entrar com Google');}finally{setLoading(false);}
+  }
   return(
     <AuthWrap>
       <div style={{textAlign:'center',marginBottom:28}}><div style={{fontSize:48}}>💪</div><div style={{fontSize:24,fontWeight:900,color:'#f1f5f9'}}>NutriPlan</div><div style={{fontSize:12,color:'#475569',marginTop:4}}>Tabela TACO · NEPA/UNICAMP</div></div>
       <div style={{fontSize:20,fontWeight:800,color:'#f1f5f9',textAlign:'center',marginBottom:24}}>Bem-vindo de volta</div>
+      <button style={{width:'100%',padding:13,marginBottom:16,borderRadius:10,border:'1px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.07)',color:'#f1f5f9',fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10}} onClick={handleGoogle} disabled={loading}>
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style={{width:20,height:20}}/>
+        Entrar com Google
+      </button>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+        <div style={{flex:1,height:1,background:'rgba(255,255,255,0.08)'}}/>
+        <span style={{fontSize:11,color:'#475569',fontWeight:600}}>OU</span>
+        <div style={{flex:1,height:1,background:'rgba(255,255,255,0.08)'}}/>
+      </div>
       <label style={S.label}>📧 E-MAIL</label>
       <input style={{...S.input,marginBottom:12}} type="email" placeholder="seu@email.com" value={email} onChange={e=>setEmail(e.target.value)}/>
       <label style={S.label}>🔒 SENHA</label>
@@ -175,10 +188,23 @@ function RegisterPage({onSwitch,onLogin}){
     setLoading(true);
     try{await signUp({email:form.email,password:form.password,name:form.name});onLogin();}catch(e){setErr(e.message||'Erro ao criar conta');}finally{setLoading(false);}
   }
+  async function handleGoogle(){
+    setLoading(true);
+    try{await signInWithGoogle();}catch(e){setErr(e.message||'Erro ao entrar com Google');}finally{setLoading(false);}
+  }
   return(
     <AuthWrap>
       <div style={{textAlign:'center',marginBottom:24}}><div style={{fontSize:48}}>🥗</div><div style={{fontSize:24,fontWeight:900,color:'#f1f5f9'}}>NutriPlan</div></div>
       <div style={{fontSize:20,fontWeight:800,color:'#f1f5f9',textAlign:'center',marginBottom:24}}>Criar conta</div>
+      <button style={{width:'100%',padding:13,marginBottom:16,borderRadius:10,border:'1px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.07)',color:'#f1f5f9',fontSize:14,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:10}} onClick={handleGoogle} disabled={loading}>
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style={{width:20,height:20}}/>
+        Cadastrar com Google
+      </button>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+        <div style={{flex:1,height:1,background:'rgba(255,255,255,0.08)'}}/>
+        <span style={{fontSize:11,color:'#475569',fontWeight:600}}>OU</span>
+        <div style={{flex:1,height:1,background:'rgba(255,255,255,0.08)'}}/>
+      </div>
       {[['name','👤','NOME','Seu nome'],['email','📧','E-MAIL','seu@email.com'],['password','🔒','SENHA','Mín. 6 caracteres'],['confirm','🔒','CONFIRMAR','Repita a senha']].map(([k,ic,lb,ph])=>(
         <div key={k} style={{marginBottom:12}}><label style={S.label}>{ic} {lb}</label><input style={S.input} type={k==='password'||k==='confirm'?'password':'text'} placeholder={ph} value={form[k]} onChange={set(k)}/></div>
       ))}
@@ -248,7 +274,7 @@ function ProfilePage({userId,initialProfile,onSave,onBack}){
 }
 
 // ── MODAL TROCA DE TREINO ─────────────────────────────────────────────────────
-function WorkoutModal({day,onSelect,onClose}){
+function WorkoutModal({day,onSelect,onClose,profiles=[]}){
   const [tab,setTab]=useState(day.type);
   const [mode,setMode]=useState('list');
   const [customName,setCustomName]=useState(day.typeLabel||''  );
@@ -266,70 +292,41 @@ function WorkoutModal({day,onSelect,onClose}){
           <div style={{fontSize:16,fontWeight:800,color:'#f1f5f9'}}>🔄 Editar Treino — {day.fullName}</div>
           <button style={S.btn('#ef4444')} onClick={onClose}>✕</button>
         </div>
-        <div style={{display:'flex',gap:8,marginBottom:16}}>
-          {[['list','📋 Lista'],['custom','✏️ Personalizar']].map(([m,lb])=>(
-            <button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:'8px 0',borderRadius:10,border:'1px solid',cursor:'pointer',fontSize:13,fontWeight:700,
-              ...(mode===m?{background:'#6366f122',borderColor:'#6366f1',color:'#818cf8'}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.08)',color:'#475569'})}}>
-              {lb}
-            </button>
-          ))}
-        </div>
-        {mode==='list'?(
+        {/* Perfis do usuário */}
+        {profiles.length>0&&(
           <>
-            <div style={{display:'flex',gap:8,marginBottom:16}}>
-              {WORKOUT_TYPES.map(wt=>(
-                <button key={wt.type} onClick={()=>setTab(wt.type)} style={{flex:1,padding:'8px 0',borderRadius:10,border:'1px solid',cursor:'pointer',fontSize:13,fontWeight:700,
-                  ...(tab===wt.type?{background:wt.color+'22',borderColor:wt.color,color:wt.color}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.08)',color:'#475569'})}}>
-                  {wt.icon} {wt.label}
-                </button>
-              ))}
-            </div>
+            <div style={{fontSize:11,color:'#475569',fontWeight:700,marginBottom:8}}>MEUS TREINOS</div>
             <div style={{overflowY:'auto',flex:1,display:'flex',flexDirection:'column',gap:8}}>
-              {group.options.map((opt,i)=>{
-                const isActive=day.typeLabel===opt.typeLabel;
+              {profiles.map((p,i)=>{
+                const color=WORKOUT_TYPES.find(w=>w.type===p.type)?.color||'#22c55e';
+                const isActive=day.typeLabel===p.typeLabel;
                 return(
-                  <div key={i} onClick={()=>onSelect({type:group.type,color:group.color,...opt})}
+                  <div key={i} onClick={()=>onSelect({type:p.type,color,typeLabel:p.typeLabel,exercises:p.exercises||''})}
                     style={{padding:'12px 14px',borderRadius:12,cursor:'pointer',border:'1px solid',
-                      ...(isActive?{background:group.color+'18',borderColor:group.color}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.06)'})}}>
+                      ...(isActive?{background:color+'18',borderColor:color}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.06)'})}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
-                      <div style={{fontSize:13,fontWeight:700,color:isActive?group.color:'#f1f5f9'}}>{opt.typeLabel}</div>
-                      {isActive&&<span style={S.badge(group.color)}>✓ Ativo</span>}
+                      <div style={{fontSize:13,fontWeight:700,color:isActive?color:'#f1f5f9'}}>{p.typeLabel}</div>
+                      {isActive&&<span style={S.badge(color)}>✓ Ativo</span>}
                     </div>
-                    <div style={{fontSize:12,color:'#64748b',marginBottom:4}}>{opt.detail}</div>
-                    <div style={{fontSize:11,color:'#475569',lineHeight:1.5}}>{opt.exercises}</div>
+                    {p.exercises&&<div style={{fontSize:11,color:'#475569',lineHeight:1.6,whiteSpace:'pre-line',marginTop:4}}>{p.exercises}</div>}
                   </div>
                 );
               })}
-            </div>
-          </>
-        ):(
-          <div style={{overflowY:'auto',flex:1,display:'flex',flexDirection:'column',gap:14}}>
-            <div>
-              <label style={S.label}>🏷️ TIPO DE TREINO</label>
-              <div style={{display:'flex',gap:8}}>
-                {WORKOUT_TYPES.map(wt=>(
-                  <button key={wt.type} onClick={()=>setTab(wt.type)} style={{flex:1,padding:'8px 0',borderRadius:10,border:'1px solid',cursor:'pointer',fontSize:18,
-                    ...(tab===wt.type?{background:wt.color+'22',borderColor:wt.color}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.08)'})}}>
-                    {wt.icon}
-                  </button>
-                ))}
+              {/* Opção descanso */}
+              <div onClick={()=>onSelect({type:'rest',color:'#64748b',typeLabel:'Descanso',exercises:'Nenhum treino – foco em sono e recuperação'})}
+                style={{padding:'12px 14px',borderRadius:12,cursor:'pointer',border:'1px solid',
+                  ...(day.type==='rest'?{background:'#64748b18',borderColor:'#64748b'}:{background:'rgba(255,255,255,0.03)',borderColor:'rgba(255,255,255,0.06)'})}}>
+                <div style={{fontSize:13,fontWeight:700,color:day.type==='rest'?'#94a3b8':'#f1f5f9'}}>😴 Descanso</div>
               </div>
             </div>
-            <div>
-              <label style={S.label}>📝 NOME DO TREINO</label>
-              <input style={S.input} value={customName} onChange={e=>setCustomName(e.target.value)} placeholder="Ex: Treino A – Peito e Tríceps"/>
-            </div>
-            <div>
-              <label style={S.label}>📋 DESCRIÇÃO CURTA</label>
-              <input style={S.input} value={customDetail} onChange={e=>setCustomDetail(e.target.value)} placeholder="Ex: Supino · Tríceps · Ombro 🏋️"/>
-            </div>
-            <div>
-              <label style={S.label}>💪 EXERCÍCIOS E SÉRIES</label>
-              <textarea style={{...S.input,minHeight:120,resize:'vertical',lineHeight:1.6}} value={customExercises} onChange={e=>setCustomExercises(e.target.value)}
-                placeholder={"Ex:\nSupino reto 4×8\nSupino inclinado 3×10\nCrucifixo 3×12\nTríceps polia 4×10"}/>
-              <div style={{fontSize:11,color:'#475569',marginTop:4}}>Um exercício por linha com séries e repetições</div>
-            </div>
-            <button style={{...S.btn('#22c55e'),padding:13,fontSize:14}} onClick={handleCustomSave}>✅ Salvar Treino Personalizado</button>
+          </>
+        )}
+        {profiles.length===0&&(
+          <div style={{textAlign:'center',padding:'32px 0',flex:1}}>
+            <div style={{fontSize:40,marginBottom:10}}>💪</div>
+            <div style={{color:'#f1f5f9',fontWeight:700,marginBottom:6}}>Nenhum treino criado</div>
+            <div style={{color:'#475569',fontSize:12,marginBottom:16}}>Crie seus treinos na aba 💪 Treinos para poder selecioná-los aqui.</div>
+            <button style={{...S.btn('#22c55e'),padding:'10px 20px'}} onClick={onClose}>Ir para Treinos</button>
           </div>
         )}
       </div>
@@ -484,7 +481,6 @@ function WorkoutProfilesPage({profiles,plan,onSave,onDelete,onApplyToDay,onBack,
 
         {profiles.map(p=>{
           const color=WORKOUT_TYPES.find(w=>w.type===p.type)?.color||'#22c55e';
-          const daysUsing=plan?plan.map((d,i)=>d.typeLabel===p.typeLabel?i:-1).filter(i=>i>=0):[];
           if(editing?.id===p.id) return <EditForm key={p.id} initial={p} onDone={()=>setEditing(null)}/>;
           return(
             <div key={p.id} style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${color}33`,borderRadius:16,padding:16,marginBottom:12}}>
@@ -503,27 +499,7 @@ function WorkoutProfilesPage({profiles,plan,onSave,onDelete,onApplyToDay,onBack,
                   {p.exercises}
                 </div>
               )}
-              {daysUsing.length>0&&(
-                <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:10}}>
-                  {daysUsing.map(i=><span key={i} style={{...S.badge(color),fontSize:11}}>{DAYS_SHORT[i]}</span>)}
-                  <span style={{fontSize:11,color:'#475569'}}>usando este perfil</span>
-                </div>
-              )}
-              <div>
-                <div style={{fontSize:11,color:'#475569',marginBottom:6,fontWeight:700}}>APLICAR AO DIA:</div>
-                <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-                  {DAYS_SHORT.map((d,i)=>{
-                    const isUsing=plan?.[i]?.typeLabel===p.typeLabel;
-                    return(
-                      <button key={i} onClick={()=>onApplyToDay(p.id,i,isUsing)}
-                        style={{padding:'5px 10px',borderRadius:8,border:'1px solid',cursor:'pointer',fontSize:12,fontWeight:700,
-                          ...(isUsing?{background:color+'22',borderColor:color,color:color}:{background:'rgba(255,255,255,0.04)',borderColor:'rgba(255,255,255,0.08)',color:'#475569'})}}>
-                        {d}{isUsing?' ✓':''}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+
             </div>
           );
         })}
@@ -966,7 +942,7 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
           </div>
         </div>
       )}
-      {showWorkout&&<WorkoutModal day={day} onSelect={applyWorkout} onClose={()=>setShowWorkout(false)}/>}
+      {showWorkout&&<WorkoutModal day={day} onSelect={applyWorkout} onClose={()=>setShowWorkout(false)} profiles={workoutProfiles}/>}
     </div>
   );
 }
