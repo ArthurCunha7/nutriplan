@@ -816,7 +816,7 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
           <div>
             <div style={{fontSize:18,fontWeight:800,color:'#f1f5f9'}}>{day.fullName}</div>
             <div style={{display:'flex',alignItems:'center',gap:8,marginTop:4}}>
-              <div style={{fontSize:13,color:tc,fontWeight:700}}>{day.typeLabel}</div>
+              {(day.type==='rest'||workoutProfiles.some(p=>p.typeLabel===day.typeLabel))&&<div style={{fontSize:13,color:tc,fontWeight:700}}>{day.typeLabel}</div>}
               {/* Botão troca treino */}
               <button onClick={()=>setShowWorkout(true)} style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,color:'#94a3b8',padding:'2px 8px',fontSize:11,cursor:'pointer',fontWeight:600}}>🔄 Treino</button>
               <button onClick={()=>setShowMealCount(true)} style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,color:'#94a3b8',padding:'2px 8px',fontSize:11,cursor:'pointer',fontWeight:600}}>🍽️ Refeições</button>
