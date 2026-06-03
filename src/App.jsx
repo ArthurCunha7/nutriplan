@@ -821,7 +821,7 @@ function MealPlanApp({onLogout,userId,onOpenProfile}){
               <button onClick={()=>setShowWorkout(true)} style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,color:'#94a3b8',padding:'2px 8px',fontSize:11,cursor:'pointer',fontWeight:600}}>🔄 Treino</button>
               <button onClick={()=>setShowMealCount(true)} style={{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,color:'#94a3b8',padding:'2px 8px',fontSize:11,cursor:'pointer',fontWeight:600}}>🍽️ Refeições</button>
             </div>
-            {day.exercises&&<div style={{fontSize:12,color:'#94a3b8',marginTop:6,lineHeight:1.7,whiteSpace:'pre-line'}}>{day.exercises.replace(/·/g,'\n')}</div>}
+            {day.exercises&&(day.type==='rest'||workoutProfiles.some(p=>p.typeLabel===day.typeLabel))&&<div style={{fontSize:12,color:'#94a3b8',marginTop:6,lineHeight:1.7,whiteSpace:'pre-line'}}>{day.exercises.replace(/·/g,'\n')}</div>}
           </div>
           <div style={{textAlign:'right'}}>
             <div style={{fontSize:20,fontWeight:900,color:tc}}>{dayTotals.kcal}</div>
